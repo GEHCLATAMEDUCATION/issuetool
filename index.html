@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Teams Chat + Mailto + Issue Builder — GE HealthCare</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+  <style>
+    :root { --bg:#0f172a; --card:#111827; --muted:#94a3b8; --text:#e5e7eb; --accent:#6366f1; --border:#1f2937; --chip-bg:#0b1022; --chip-on:#1d2a72; --chip-on-border:#334155; }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:radial-gradient(1200px 600px at 10% 10%,#111827 0%,#0b1022 60%,var(--bg) 100%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans",sans-serif}
+    .container{max-width:1000px;margin:3rem auto;padding:0 1rem}
+    .card{background:rgba(17,24,39,.86);border:1px solid var(--border);border-radius:16px;padding:1.5rem;box-shadow:0 10px 35px rgba(0,0,0,.35);backdrop-filter:blur(6px)}
+    h1{margin:0 0 .25rem;font-size:1.6rem;line-height:1.2}
+    p.desc{margin:0 0 1.1rem;color:var(--muted)}
+    label{display:block;margin:.85rem 0 .35rem;font-weight:600}
+    input[type=email],input[type=text],select,textarea{width:100%;padding:.85rem .9rem;border-radius:10px;border:1px solid var(--border);background:#0b1022;color:var(--text);outline:none;transition:border-color .15s ease,box-shadow .15s ease}
+    input[type=email]:focus,input[type=text]:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.25)}
+    .row{display:grid;grid-template-columns:1fr;gap:.75rem}
+    @media(min-width:640px){.row{grid-template-columns:1fr 1fr}.row-4{grid-template-columns:1fr 1fr}}
+    .actions{display:flex;flex-wrap:wrap;gap:.65rem;margin-top:1.1rem;align-items:center}
+    button,a.btn{appearance:none;border:0;border-radius:10px;padding:.85rem 1rem;font-weight:700;cursor:pointer;text-decoration:none}
+    button.primary{background:linear-gradient(135deg,var(--accent),#7c3aed);color:#fff}
+    a.btn.secondary,button.secondary{background:#7c3aed;border:1px solid var(--border);color:var(--text)}
+    .hint{font-size:.85rem;color:var(--muted);margin-top:.35rem}
+    .error,.success{margin-top:.75rem;padding:.6rem .75rem;border-radius:10px;display:none}
+    .error{color:#fecaca;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.45)}
+    .success{color:#dcfce7;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.45)}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace}
+    #preview{word-wrap:anywhere;margin-top:.5rem;color:#cbd5e1}
+    .badge{display:inline-block;font-size:.78rem;padding:.1rem .4rem;border:1px solid var(--border);border-radius:8px;color:#a5b4fc}
+    .chips{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.5rem}
+    .chip{background:var(--chip-bg);border:1px solid var(--border);color:var(--text);border-radius:999px;padding:.45rem .75rem;font-size:.9rem;cursor:pointer;user-select:none;transition:background .15s ease,border-color .15s ease,transform .05s ease}
+    .chip:active{transform:translateY(1px)}
+    .chip.is-on{background:var(--chip-on);border-color:var(--chip-on-border)}
+    .chip small{opacity:.8;font-size:.85em}
+    .tabs{display:flex;gap:.5rem;flex-wrap:wrap}
+    .tab{background:#361470;border:1px solid var(--border);color:var(--text);border-radius:999px;padding:.45rem .85rem;cursor:pointer;font-weight:700}
+    .tab.is-active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(99,102,241,.2) inset}
+    .selected-bar{display:flex;flex-wrap:wrap;gap:.4rem;padding:.5rem;margin-top:.5rem;background:rgba(2,6,23,.35);border:1px solid var(--border);border-radius:10px}
+    .sel-item{display:inline-flex;align-items:center;gap:.4rem;background:#0b1022;border:1px solid #334155;padding:.25rem .55rem;border-radius:999px;font-size:.85rem}
+    .sel-item button{background:transparent;border:0;color:#94a3b8;cursor:pointer;font-weight:900;line-height:1;padding:0 .1rem}
+    .section-title{margin-top:1.25rem;font-size:2.15rem;font-weight:1000}
+    .box{border:1px solid var(--border);background:rgba(2,6,23,.35);border-radius:10px;padding:.8rem;white-space:pre-line}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+
+      <!-- Language toggle -->
+      <div style="display:flex; justify-content:flex-end; gap:.5rem; margin-bottom:.5rem;">
+        <button type="button" id="btnLangPT" class="tab is-active" aria-pressed="true">PT</button>
+        <button type="button" id="btnLangES" class="tab" aria-pressed="false">ES</button>
+      </div>
+
+      <h1 data-i18n="title">Issue Report Generator Tool 
+ EDUCATION GE HealthCare</h1>
+      <p class="desc" data-i18n="intro">Selecione participantes, defina o título, crie o chat do Teams, gere um e‑mail e componha o texto do issue com saudação e encerramento automáticos.</p>
+
+      <div class="tabs" id="groupTabs" role="tablist" aria-label="Filtrar contatos por grupo">
+        <button type="button" class="tab is-active" data-filter="all" data-i18n="tab_all">Todos</button>
+        <button type="button" class="tab" data-filter="coord_agenda" data-i18n="tab_coord">Coordenadores Agenda</button>
+        <button type="button" class="tab" data-filter="gerentes_clinicos" data-i18n="tab_mgrs">Gerentes Clínicos</button>
+        <button type="button" class="tab" data-filter="PMI" data-i18n="tab_pmi">PMI</button>
+        <button type="button" class="tab" data-filter="ASM" data-i18n="tab_asm">ASM</button>
+      </div>
+
+      <div class="chips" id="quickChips" aria-live="polite" aria-label="Contatos rápidos"></div>
+
+      <label style="margin-top:.85rem;" data-i18n="selected_label">Selecionados</label>
+      <div class="selected-bar" id="selectedBar" aria-live="polite"></div>
+
+      <form id="chatForm" autocomplete="on">
+        <div class="row row-4" style="margin-top:.75rem;">
+          <div>
+            <label for="email1" data-i18n="email1">E-mail 1</label>
+            <input id="email1" type="email" placeholder="pessoa1@gehealthcare.com" data-i18n-ph="ph_email1" />
+          </div>
+          <div>
+            <label for="email2" data-i18n="email2">E-mail 2</label>
+            <input id="email2" type="email" placeholder="pessoa2@gehealthcare.com" data-i18n-ph="ph_email2" />
+          </div>
+          <div>
+            <label for="email3" data-i18n="email3">E-mail 3</label>
+            <input id="email3" type="email" placeholder="pessoa3@gehealthcare.com" data-i18n-ph="ph_email3" />
+          </div>
+          <div>
+            <label for="email4" data-i18n="email4">E-mail 4</label>
+            <input id="email4" type="email" placeholder="pessoa4@gehealthcare.com" data-i18n-ph="ph_email4" />
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:.75rem;">
+          <div>
+            <label for="clientName" data-i18n="client_label">Nome do cliente e GON</label>
+            <input id="clientName" type="text" placeholder="ex.: Hospital Thomas Edison 5123456" data-i18n-ph="ph_client" />
+            <div class="hint" data-i18n="client_hint">Será incluído no início do título.</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:.5rem;margin-top:1.9rem;">
+            <input id="redFlag" type="checkbox" />
+            <label for="redFlag" style="margin:0;">RedFlag</label>
+            <span class="hint" data-i18n="rf_hint">Se marcado, <strong>REDFLAG</strong> será incluído no título.</span>
+          </div>
+        </div>
+
+        <label for="topicName" style="margin-top:1rem;" data-i18n="topic_label">Nome do grupo (Título do chat)</label>
+        <input id="topicName" type="text" value="[Nome Cliente]
+ [REDFLAG opcional]
+ Issue encontrado" required />
+        <div class="hint" data-i18n="topic_hint">O título é montado automaticamente (Cliente + REDFLAG opcional + "Issue encontrado"), mas você pode editar manualmente.</div>
+
+        <div class="actions">
+          <a id="testLink" class="btn secondary" href="#" target="_blank" rel="noopener" data-i18n="btn_create_teams">Criar chat no MS Teams</a>
+          <button id="btnMailto" class="secondary" type="button" data-i18n="btn_mailto">Criar e‑mail</button>
+          <button id="copyLink" class="secondary" type="button" data-i18n="btn_copy_link">Copiar link do chat</button>
+        </div>
+
+        <div id="errorBox" class="error"></div>
+        <div id="successBox" class="success"></div>
+      </form>
+
+      <div class="mono" id="preview"></div>
+
+      <div class="section-title" data-i18n="issue_title">Texto do Issue</div>
+      <p class="desc" style="margin-top:.2rem;" data-i18n="issue_intro">Preencha os campos abaixo para gerar um texto estruturado sobre o issue.</p>
+
+      <div class="row">
+        <div>
+          <label data-i18n="cat_label">Categoria</label>
+          <select id="issCat">
+            <option value="" disabled selected data-i18n="opt_select">Selecione...</option>
+            <option data-i18n="opt_licenca">Licença de Software</option>
+            <option data-i18n="opt_config">Configuração</option>
+            <option data-i18n="opt_acess">Acessórios e Materiais</option>
+            <option data-i18n="opt_cliente">Cliente</option>
+            <option data-i18n="opt_instal">Falha/Pendência de Instalação</option>
+            <option data-i18n="opt_qualid">Qualidade de Imagem</option>
+          </select>
+        </div>
+        <div>
+          <label data-i18n="impact_label">Impacto</label>
+          <div class="actions" style="gap:.6rem;padding:0;margin:0;">
+            <label style="display:inline-flex;align-items:center;gap:.4rem;"><input type="radio" name="impact" value="Alto"> <span data-i18n="impact_high">Alto</span></label>
+            <label style="display:inline-flex;align-items:center;gap:.4rem;"><input type="radio" name="impact" value="Médio"> <span data-i18n="impact_med">Médio</span></label>
+            <label style="display:inline-flex;align-items:center;gap:.4rem;"><input type="radio" name="impact" value="Baixo"> <span data-i18n="impact_low">Baixo</span></label>
+          </div>
+        </div>
+      </div>
+
+      <label data-i18n="areas_label">Área de atuação (múltipla seleção)</label>
+      <div class="actions" id="areasWrap" style="gap:.6rem;padding:0;">
+        <label style="display:inline-flex;align-items:center;gap:.4rem;"><input type="checkbox" value="Engenharia"> <span data-i18n="area_eng">Engenharia</span></label>
+        <label style="display:inline-flex;align-items:center;gap:.4rem;"><input type="checkbox" value="Comercial"> <span data-i18n="area_com">Comercial</span></label>
+        <label style="display:inline-flex;align-items:center;gap:.4rem;"><input type="checkbox" value="Cliente"> <span data-i18n="area_cli">Cliente</span></label>
+        <label style="display:inline-flex;align-items:center;gap:.4rem;"><input type="checkbox" value="Educação"> <span data-i18n="area_edu">Educação</span></label>
+      </div>
+
+      <label data-i18n="desc_label">Descrição</label>
+      <textarea id="issDesc" rows="6" style="width:100%; padding:.85rem .9rem; border-radius:10px; border:1px solid var(--border); background:#0b1022; color:var(--text); outline:none; resize:vertical;" placeholder="Detalhes do que foi encontrado de acordo com a categoria selecionada (ex.: falta de licença SSF2)" data-i18n-ph="ph_desc"></textarea>
+
+      <label data-i18n="preview_issue_label">Texto do Issue (pré-visualização do corpo do e‑mail)</label>
+      <div id="issPreview" class="box mono"></div>
+
+      <div class="actions">
+        <button id="btnCopyIssue" class="secondary" type="button" data-i18n="btn_copy_issue">Copiar texto</button>
+        <span id="copyStatus" class="hint" aria-live="polite"></span>
+      </div>
+
+      <p class="hint" data-i18n="mailto_hint">Ao clicar em <strong>Criar e‑mail (mailto)</strong>, o <em>Assunto</em> usa o título do chat e o <em>Corpo</em> usa exatamente o texto acima.</p>
+
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    // ====== Referências ======
+    const form = document.getElementById('chatForm');
+    const copyBtn = document.getElementById('copyLink');
+    const testLink = document.getElementById('testLink');
+    const mailtoBtn = document.getElementById('btnMailto');
+    const errorBox = document.getElementById('errorBox');
+    const successBox = document.getElementById('successBox');
+    const preview = document.getElementById('preview');
+    const selectedBar = document.getElementById('selectedBar');
+    const chipsWrap = document.getElementById('quickChips');
+    const groupTabs = document.getElementById('groupTabs');
+    const emailInputs = [ document.getElementById('email1'), document.getElementById('email2'), document.getElementById('email3'), document.getElementById('email4') ];
+    const topicInput = document.getElementById('topicName');
+    const clientInput = document.getElementById('clientName');
+    const redFlagChk = document.getElementById('redFlag');
+
+    // ====== Catálogo (chips) CONTATOS ======
+    const CATALOG = [
+      //COORDENADORES AGENDA
+      { group:'coord_agenda', label:'Carla Sa', role:'Coord. Agenda', email:'carla.sa@gehealthcare.com' },
+      { group:'coord_agenda', label:'Gabriela Teran', role:'Coord. Agenda', email:'gabriela.teran@gehealthcare.com' },
+      //GERENTES CLINICOS
+      { group:'gerentes_clinicos', label:'John Schiavinati', role:'Gerente Clínico', email:'john.w.schiavinati@gehealthcare.com' },
+      { group:'gerentes_clinicos', label:'Renata Moura', role:'Gerente Clínica', email:'renata.moura@gehealthcare.com' },
+      { group:'gerentes_clinicos', label:'Marco Silva', role:'Gerente Clínico', email:'marco.a.silva@gehealthcare.com' },
+      //PMI'S
+      { group:'PMI', label:'Acácio Menezes', role:'PMI', email:'Acacio.Menezes@gehealthcare.com' },
+      { group:'PMI', label:'Adalberto Lima', role:'PMI', email:'Adalberto.Lima@gehealthcare.com' },
+      { group:'PMI', label:'Bruno Cruz', role:'PMI', email:'Bruno.Cruz@gehealthcare.com' },
+      { group:'PMI', label:'Daniel Dias', role:'PMI', email:'daniel.R.dias@gehealthcare.com' },
+      { group:'PMI', label:'Felipe Lima', role:'PMI', email:'felipe.lima@gehealthcare.com' },
+      { group:'PMI', label:'Frederico Pimenta', role:'PMI', email:'frederico.pimenta@gehealthcare.com' },
+      { group:'PMI', label:'Gisele Alves', role:'PMI', email:'Gisele.Alves@gehealthcare.com' },
+      { group:'PMI', label:'Rafael Baratela', role:'PMI', email:'Rafael.Baratella@gehealthcare.com' },
+      { group:'PMI', label:'Wagner Pinto', role:'PMI', email:'Wagner.Pinto@gehealthcare.com' },
+      { group:'PMI', label:'Fabian Freire', role:'PMI', email:'Fabian.Freire@gehealthcare.com' },
+      //ASM'S POR REGIÃO 
+      //ASM'S BRASIL (BR)
+      { group:'ASM', label:'André Rosa (BR-RS)', role:'ASM', email:'Andre.Rosa@gehealthcare.com' },
+      { group:'ASM', label:'Augusto Machado (BR-PR,SC)', role:'ASM', email:'Augusto.Machado@gehealthcare.com' },
+      { group:'ASM', label:'Carlos Menezes (BR-RJ,ES)', role:'ASM', email:'CarlosAlberto.Menezes@gehealthcare.com' },
+      { group:'ASM', label:'Claudio Zimbarra (BR-MT,GO,TO)', role:'ASM', email:'Claudio.Zimbarra@gehealthcare.com' },
+      { group:'ASM', label:'Fabrizio Rodrigues (BR-SP,MS)', role:'ASM', email:'Fabrizio.d.Rodrigues@gehealthcare.com' },
+      { group:'ASM', label:'Gisele Vieira (BR-BA,SE,AL,PE,PI)', role:'ASM', email:'Gisele.Vieira@gehealthcare.com' },
+      { group:'ASM', label:'Elisa Muniz (BR)', role:'ASM', email:'Elisa.Muniz@gehealthcare.com' },
+      { group:'ASM', label:'Marcelo Padilha (BR-NORTE,CE,RN,PB)', role:'ASM', email:'marcelo.A.padilha@gehealthcare.com' },
+      { group:'ASM', label:'Osmar Ribeiro (BR-MG)', role:'ASM', email:'Osmar.Ribeiro@gehealthcare.com' },
+      { group:'ASM', label:'Thiago Lehmann Santos (BR-Interior SP)', role:'ASM', email:'thiago.lehmann.santos@gehealthcare.com' },
+      { group:'ASM', label:'Simone Vieira (BR)', role:'ASM', email:'Simone.Vieira@gehealthcare.com' },
+      { group:'ASM', label:'Vinicius Santos (BR)', role:'ASM', email:'Vinicius.N.Santos@gehealthcare.com' },
+      //ASM'S MEXICO (MX)
+      { group:'ASM', label:'José Vázquez (MX-Pacific)', role:'ASM', email:'j.vazquez@gehealthcare.com' },
+      { group:'ASM', label:'Juan Pablo Nuñez (MX-Bajío)', role:'ASM', email:'juan.naaez@gehealthcare.com' },
+      { group:'ASM', label:'Julián Hernández (MX-CDMX North)', role:'ASM', email:'julian.hernandez1@gehealthcare.com' },
+      { group:'ASM', label:'Lina Pérez (MX-North)', role:'ASM', email:'lina.perez@gehealthcare.com' },
+      { group:'ASM', label:'Maleni Vidal (MX-CDMX South)', role:'ASM', email:'maleni.vidal@gehealthcare.com' },
+      { group:'ASM', label:'Roberto Mendoza (MX-South)', role:'ASM', email:'jose.mendoza1@gehealthcare.com' },
+      //ASM'S ARGENTINA (AR)
+      { group:'ASM', label:'Javier Beitia (AR)', role:'ASM', email:'javier.beitia@gehealthcare.com' },
+      { group:'ASM', label:'Matías Fregonese (AR)', role:'ASM', email:'matias.fregonese@gehealthcare.com' },
+      //ASM'S CHILE (CL)
+      { group:'ASM', label:'Humberto Fuentes (CL)', role:'ASM', email:'humberto.fuentes@gehealthcare.com' },
+      { group:'ASM', label:'Jorge del Toro (CL)', role:'ASM', email:'jorge.toro@gehealthcare.com' },
+      //ASM'S COLOMBIA (CO)
+      { group:'ASM', label:'Alan Garzón (CO-NORTE,CENTRO)', role:'ASM', email:'alan.garzon@gehealthcare.com' },
+      { group:'ASM', label:'Jonathan Potes (CO)', role:'ASM', email:'jonathan.potes@gehealthcare.com' },
+      //ASM'S EQUADOR (ORIMEC) (EC)
+      { group:'ASM', label:'Juan Guzmán Berru (EC-ORIMEC)', role:'ASM', email:'jfguzman@orimec.com.ec' },
+      //ASM'S HONDURAS (HOSPITEC) (HN)
+      { group:'ASM', label:'Ramón Padilla (HN-HOSPITEC)', role:'ASM', email:'ramon.padilla@hospitechn.com' },
+      //ASM'S PANAMA (PROMED) (PA)
+      { group:'ASM', label:'Jhoser Mendoza (PA-PROMED)', role:'ASM', email:'jmendoza@promed-sa.com' },
+    ];
+
+    // ====== Utilidades ======
+    const emailRegex = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+    function sanitizeEmail(v){ return (v ?? '').trim(); }
+    function buildTeamsChatLink(emails, topic){
+      const base='https://teams.microsoft.com/l/chat/0/0';
+      const usersParam='users='+emails.join(',');
+      const topicParam=topic? '&topicName='+encodeURIComponent(topic):'';
+      return base+'?'+usersParam+topicParam;
+    }
+    function collectEmails(){ return emailInputs.map(i=>sanitizeEmail(i.value)).filter(v=>v.length>0); }
+    function setEmails(emails){ for(let i=0;i<emailInputs.length;i++){ emailInputs[i].value = emails[i] ?? ''; } updateChipStates(); renderSelected(); refreshPreview(); }
+    function dedupe(list){ const out=[],seen=new Set(); for(const e of list){ const l=e.toLowerCase(); if(!seen.has(l)){ seen.add(l); out.push(l);} } return out; }
+    function show(box,msg){ box.innerHTML = msg; box.style.display='block'; }
+    function hide(box){ box.innerHTML=''; box.style.display='none'; }
+
+    // ====== I18N (PT/ES) ======
+    const I18N = {
+      pt: {
+        title: "Issue Report Generator Tool\n EDUCATION GE HealthCare",
+        intro: "Selecione participantes, defina o título, crie o chat do Teams, gere um e‑mail e componha o texto do issue com saudação e encerramento automáticos.",
+        tab_all: "Todos",
+        tab_coord: "Coordenadores Agenda",
+        tab_mgrs: "Gerentes Clínicos",
+        tab_pmi: "PMI",
+        tab_asm: "ASM",
+        selected_label: "Selecionados",
+        email1: "E-mail 1",
+        email2: "E-mail 2",
+        email3: "E-mail 3",
+        email4: "E-mail 4",
+        ph_email1: "pessoa1@gehealthcare.com",
+        ph_email2: "pessoa2@gehealthcare.com",
+        ph_email3: "pessoa3@gehealthcare.com",
+        ph_email4: "pessoa4@gehealthcare.com",
+        client_label: "Nome do cliente e GON",
+        ph_client: "ex.: Hospital Thomas Edison 5123456",
+        client_hint: "Será incluído no início do título.",
+        rf_hint: "Se marcado, <strong>REDFLAG</strong> será incluído no título.",
+        topic_label: "Nome do grupo (Título do chat)",
+        topic_hint: "O título é montado automaticamente (Cliente + REDFLAG opcional + \"Issue encontrado\"), mas você pode editar manualmente.",
+        btn_create_teams: "Criar chat no MS Teams",
+        btn_mailto: "Criar e‑mail",
+        btn_copy_link: "Copiar link do chat",
+        issue_title: "Texto do Issue",
+        issue_intro: "Preencha os campos abaixo para gerar um texto estruturado sobre o issue.",
+        cat_label: "Categoria",
+        opt_select: "Selecione...",
+        opt_licenca: "Licença de Software",
+        opt_config: "Configuração",
+        opt_acess: "Acessórios e Materiais",
+        opt_cliente: "Cliente",
+        opt_instal: "Falha/Pendência de Instalação",
+        opt_qualid: "Qualidade de Imagem",
+        impact_label: "Impacto",
+        impact_high: "Alto",
+        impact_med: "Médio",
+        impact_low: "Baixo",
+        areas_label: "Área de atuação (múltipla seleção)",
+        area_eng: "Engenharia",
+        area_com: "Comercial",
+        area_cli: "Cliente",
+        area_edu: "Educação",
+        desc_label: "Descrição",
+        ph_desc: "Detalhes do que foi encontrado de acordo com a categoria selecionada (ex.: falta de licença SSF2)",
+        preview_issue_label: "Texto do Issue (pré-visualização do corpo do e‑mail)",
+        btn_copy_issue: "Copiar texto",
+        mailto_hint: "Ao clicar em <strong>Criar e‑mail (mailto)</strong>, o <em>Assunto</em> usa o título do chat e o <em>Corpo</em> usa exatamente o texto acima.",
+        msg_none_selected: "Nenhum e‑mail selecionado ainda.",
+        msg_invalid_emails: "Verifique os e‑mails inválidos: ",
+        msg_need_one_email_chat: "Informe pelo menos 1 e‑mail para iniciar o chat (1:1 ou em grupo).",
+        msg_need_one_email_mailto: "Informe ao menos 1 e‑mail para gerar o mailto.",
+        msg_opening_teams: "Abrindo o Microsoft Teams...",
+        msg_copied_link: "Link copiado.",
+        msg_copy_fail: "Falha ao copiar automaticamente.",
+        chat_one: " (chat 1:1)",
+        chat_group: " (chat em grupo)",
+        body_prefix: "Prezados,\nDurante a validação do checklist de aplicação foi encontrado o seguinte issue:",
+        body_closing: "\n\nAtenciosamente,"
+      },
+      es: {
+        title: "Herramienta generadora de reportes de incidencias\n EDUCATION GE HealthCare",
+        intro: "Seleccione participantes, defina el título, cree el chat de Teams, genere un correo y componga el texto de la incidencia con saludo y cierre automáticos.",
+        tab_all: "Todos",
+        tab_coord: "Coordinadores Agenda",
+        tab_mgrs: "Gerentes Clínicos",
+        tab_pmi: "PMI",
+        tab_asm: "ASM",
+        selected_label: "Seleccionados",
+        email1: "Correo 1",
+        email2: "Correo 2",
+        email3: "Correo 3",
+        email4: "Correo 4",
+        ph_email1: "persona1@gehealthcare.com",
+        ph_email2: "persona2@gehealthcare.com",
+        ph_email3: "persona3@gehealthcare.com",
+        ph_email4: "persona4@gehealthcare.com",
+        client_label: "Nombre del cliente y GON",
+        ph_client: "ej.: Hospital Thomas Edison 5123456",
+        client_hint: "Se incluirá al inicio del título.",
+        rf_hint: "Si se marca, <strong>REDFLAG</strong> se incluirá en el título.",
+        topic_label: "Nombre del grupo (título del chat)",
+        topic_hint: "El título se compone automáticamente (Cliente + REDFLAG opcional + \"Incidencia encontrada\"), pero puede editarlo manualmente.",
+        btn_create_teams: "Crear chat en MS Teams",
+        btn_mailto: "Crear correo",
+        btn_copy_link: "Copiar enlace del chat",
+        issue_title: "Texto de la incidencia",
+        issue_intro: "Complete los campos para generar un texto estructurado de la incidencia.",
+        cat_label: "Categoría",
+        opt_select: "Seleccione...",
+        opt_licenca: "Licencia de Software",
+        opt_config: "Configuración",
+        opt_acess: "Accesorios y Materiales",
+        opt_cliente: "Cliente",
+        opt_instal: "Falla/Pendiente de Instalación",
+        opt_qualid: "Calidad de Imagen",
+        impact_label: "Impacto",
+        impact_high: "Alto",
+        impact_med: "Medio",
+        impact_low: "Bajo",
+        areas_label: "Área de actuación (selección múltiple)",
+        area_eng: "Ingeniería",
+        area_com: "Comercial",
+        area_cli: "Cliente",
+        area_edu: "Educación",
+        desc_label: "Descripción",
+        ph_desc: "Detalles de lo encontrado según la categoría seleccionada (ej.: falta de licencia SSF2)",
+        preview_issue_label: "Texto de la incidencia (vista previa del cuerpo del correo)",
+        btn_copy_issue: "Copiar texto",
+        mailto_hint: "Al hacer clic en <strong>Crear correo (mailto)</strong>, el <em>Asunto</em> usa el título del chat y el <em>Cuerpo</em> usa exactamente el texto de arriba.",
+        msg_none_selected: "Aún no hay correos seleccionados.",
+        msg_invalid_emails: "Verifique los correos inválidos: ",
+        msg_need_one_email_chat: "Indique al menos 1 correo para iniciar el chat (1:1 o grupal).",
+        msg_need_one_email_mailto: "Indique al menos 1 correo para generar el mailto.",
+        msg_opening_teams: "Abriendo Microsoft Teams...",
+        msg_copied_link: "Enlace copiado.",
+        msg_copy_fail: "Error al copiar automáticamente.",
+        chat_one: " (chat 1:1)",
+        chat_group: " (chat grupal)",
+        body_prefix: "Estimados,\nDurante la validación del checklist de aplicación se encontró la siguiente incidencia:",
+        body_closing: "\n\nAtentamente,"
+      }
+    };
+
+    let LANG = 'pt'; // padrão
+
+    function applyI18n(){
+      const dict = I18N[LANG];
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const k = el.getAttribute('data-i18n');
+        if (dict[k] !== undefined) el.innerHTML = dict[k];
+      });
+      document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+        const k = el.getAttribute('data-i18n-ph');
+        if (dict[k] !== undefined) el.setAttribute('placeholder', dict[k]);
+      });
+      // Toggle state visuals
+      document.getElementById('btnLangPT')?.setAttribute('aria-pressed', LANG==='pt'?'true':'false');
+      document.getElementById('btnLangES')?.setAttribute('aria-pressed', LANG==='es'?'true':'false');
+      document.getElementById('btnLangPT')?.classList.toggle('is-active', LANG==='pt');
+      document.getElementById('btnLangES')?.classList.toggle('is-active', LANG==='es');
+      // Rerender dynamic parts
+      renderSelected();
+      renderIssue();
+      refreshPreview();
+    }
+    function setLang(lang){ LANG = (lang==='es') ? 'es' : 'pt'; applyI18n(); }
+
+    // ====== Composição do título ======
+    function composeTitle(){
+      const client=(clientInput.value ?? '').trim();
+      const rf=redFlagChk.checked? ' REDFLAG':'';
+      const suffix=(LANG==='es') ? ' Incidencia encontrada' : ' Issue encontrado';
+      const parts=[]; if(client) parts.push(client); if(rf) parts.push(rf.trim()); parts.push(suffix.trimStart());
+      return parts.join(' ');
+    }
+    function applyComposedTitle(){ const t=composeTitle(); if(t){ topicInput.value=t; refreshPreview(); } }
+
+    // ====== Chips ======
+    function renderChips(filter='all'){
+      chipsWrap.innerHTML='';
+      const items=CATALOG.filter(c=>filter==='all'?true:c.group===filter).sort((a,b)=>a.label.localeCompare(b.label,'pt-BR'));
+      items.forEach(c=>{
+        const btn=document.createElement('button'); btn.type='button'; btn.className='chip';
+        btn.setAttribute('data-email',c.email.toLowerCase()); btn.setAttribute('data-group',c.group);
+        btn.setAttribute('title',`${c.label} • ${c.email}`);
+        btn.innerHTML=`<strong>${c.label}</strong> <small>— ${c.role}</small> <small>(${c.email.toLowerCase()})</small>`;
+        btn.addEventListener('click',()=>toggleEmail(c.email));
+        chipsWrap.appendChild(btn);
+      });
+      updateChipStates();
+    }
+    function updateChipStates(){ const current=new Set(collectEmails().map(e=>e.toLowerCase())); chipsWrap.querySelectorAll('.chip').forEach(ch=>{ const em=ch.getAttribute('data-email'); ch.classList.toggle('is-on', current.has(em)); }); }
+    function addEmail(email){ const val=email.toLowerCase(); const current=collectEmails().map(e=>e.toLowerCase()); if(current.includes(val)) return; for(const input of emailInputs){ if(!sanitizeEmail(input.value)){ input.value=val; updateChipStates(); renderSelected(); refreshPreview(); return; } } emailInputs[emailInputs.length-1].value=val; updateChipStates(); renderSelected(); refreshPreview(); }
+    function removeEmail(email){ const target=email.toLowerCase(); const values=collectEmails(); const filtered=values.filter(v=>v.toLowerCase()!==target); setEmails(filtered); }
+    function toggleEmail(email){ const curr=collectEmails().map(e=>e.toLowerCase()); if(curr.includes(email.toLowerCase())) removeEmail(email); else addEmail(email); }
+    function renderSelected(){ selectedBar.innerHTML=''; const emails=collectEmails(); if(!emails.length){ selectedBar.innerHTML=`<span class="hint">${I18N[LANG].msg_none_selected}</span>`; return; } emails.forEach(e=>{ const tag=document.createElement('span'); tag.className='sel-item'; tag.innerHTML=`<span>${e.toLowerCase()}</span>`; const x=document.createElement('button'); x.type='button'; x.setAttribute('aria-label','Remover '+e); x.textContent='×'; x.addEventListener('click',()=>removeEmail(e)); tag.appendChild(x); selectedBar.appendChild(tag); }); }
+
+    // ====== Preview do chat ======
+    function validate(){ hide(errorBox); hide(successBox); const emailsRaw=collectEmails(); const topic=(topicInput.value ?? '').trim(); const nonEmpty=emailsRaw.filter(e=>e.length>0); const invalid=nonEmpty.filter(e=>!emailRegex.test(e)); if(invalid.length>0){ show(errorBox,I18N[LANG].msg_invalid_emails + invalid.join(', ')); return null;} if(nonEmpty.length===0){ show(errorBox,I18N[LANG].msg_need_one_email_chat); return null;} const unique=dedupe(nonEmpty); const link=buildTeamsChatLink(unique, topic); preview.textContent=link + (unique.length===1? I18N[LANG].chat_one : I18N[LANG].chat_group); return link; }
+    function refreshPreview(){ const defaults=collectEmails(); const topic=(topicInput.value ?? '').trim(); const unique=dedupe(defaults); preview.textContent= unique.length? buildTeamsChatLink(unique,topic) + (unique.length===1? I18N[LANG].chat_one : I18N[LANG].chat_group) : ''; }
+
+    // ====== Issue Text Builder ======
+    const catSel = document.getElementById('issCat');
+    const impacts = Array.from(document.querySelectorAll('input[name="impact"]'));
+    const areas = Array.from(document.querySelectorAll('#areasWrap input[type="checkbox"]'));
+    const descInput = document.getElementById('issDesc');
+    const previewIssue = document.getElementById('issPreview');
+    const btnCopyIssue = document.getElementById('btnCopyIssue');
+    const copyStatus = document.getElementById('copyStatus');
+
+    function getBodyPrefix(){ return I18N[LANG].body_prefix; }
+    function getBodyClosing(){ return I18N[LANG].body_closing; }
+
+    function buildIssueOnly(){
+      const lines=[];
+      if(catSel.value) lines.push(`Categoria: ${catSel.options[catSel.selectedIndex].innerText}`);
+      const imp=(impacts.find(r=>r.checked)?.nextElementSibling?.innerText) ?? '';
+      if(imp) lines.push(`Impacto: ${imp}`);
+      const selAreas=areas.filter(ch=>ch.checked).map(ch=>ch.nextElementSibling.innerText);
+      if(selAreas.length) lines.push(`Área de atuação: ${selAreas.join(', ')}`);
+      const d=(descInput.value ?? '').trim(); if(d) lines.push(`Descrição: ${d}`);
+      return lines.join('\n');
+    }
+    function buildIssueEmailBody(){ const core = buildIssueOnly(); return core ? getBodyPrefix() + '\n' + core + getBodyClosing() : getBodyPrefix() + getBodyClosing(); }
+    function renderIssue(){ previewIssue.textContent = buildIssueEmailBody(); }
+
+    // ====== Eventos ======
+    groupTabs.querySelectorAll('.tab').forEach(tab=>{ tab.addEventListener('click',()=>{ groupTabs.querySelectorAll('.tab').forEach(t=>t.classList.remove('is-active')); tab.classList.add('is-active'); const filter=tab.getAttribute('data-filter'); renderChips(filter); }); });
+    emailInputs.forEach(inp=>{ inp.addEventListener('input',()=>{ updateChipStates(); renderSelected(); refreshPreview(); }); inp.addEventListener('blur',()=>{ updateChipStates(); renderSelected(); refreshPreview(); }); });
+    topicInput.addEventListener('input', refreshPreview);
+    clientInput.addEventListener('input', applyComposedTitle);
+    redFlagChk.addEventListener('change', applyComposedTitle);
+    catSel.addEventListener('change', renderIssue); impacts.forEach(r=>r.addEventListener('change', renderIssue)); areas.forEach(ch=>ch.addEventListener('change', renderIssue)); descInput.addEventListener('input', renderIssue);
+
+    form.addEventListener('submit', (ev)=>{ ev.preventDefault(); const link=validate(); if(!link) return; window.location.href=link; show(successBox,I18N[LANG].msg_opening_teams); });
+    copyBtn.addEventListener('click', async(ev)=>{ ev.preventDefault(); const link=validate(); if(!link) return; try{ await navigator.clipboard.writeText(link); show(successBox,I18N[LANG].msg_copied_link); }catch{ show(errorBox,I18N[LANG].msg_copy_fail); } });
+    testLink.addEventListener('click', (ev)=>{ const link=validate(); if(!link){ ev.preventDefault(); return; } testLink.setAttribute('href', link); });
+    btnCopyIssue?.addEventListener('click', async()=>{ const t=buildIssueEmailBody(); if(!t){ copyStatus.textContent= (LANG==='es'?'Nada para copiar.':'Nada para copiar.'); setTimeout(()=>copyStatus.textContent='',2000); return;} try{ await navigator.clipboard.writeText(t); copyStatus.textContent=(LANG==='es'?'Texto copiado.':'Texto copiado.'); }catch{ copyStatus.textContent=(LANG==='es'?'Copia manual el texto de arriba.':'Copie manualmente o texto acima.'); } setTimeout(()=>copyStatus.textContent='',2200); });
+
+    // ====== Mailto (Outlook: separador ';') ======
+    mailtoBtn.addEventListener('click', ()=>{ hide(errorBox); hide(successBox); const emailsRaw=collectEmails(); const nonEmpty=emailsRaw.filter(e=>e.length>0); const invalid=nonEmpty.filter(e=>!emailRegex.test(e)); if(invalid.length>0){ show(errorBox,I18N[LANG].msg_invalid_emails+invalid.join(', ')); return;} if(nonEmpty.length===0){ show(errorBox,I18N[LANG].msg_need_one_email_mailto); return;} const recipients=dedupe(nonEmpty); const subject=(topicInput.value ?? '').trim() || (LANG==='es'?'Asunto':'Assunto'); const body=buildIssueEmailBody(); const toList = recipients.join(';'); const mailto='mailto:'+encodeURIComponent(toList)+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body); window.location.href=mailto; });
+
+    // Ligar botões de idioma
+    document.getElementById('btnLangPT')?.addEventListener('click', ()=> setLang('pt'));
+    document.getElementById('btnLangES')?.addEventListener('click', ()=> setLang('es'));
+
+    // ====== Init ======
+    (function init(){ renderChips('all'); renderSelected(); applyComposedTitle(); refreshPreview(); renderIssue(); applyI18n(); })();
+  })();
+  </script>
+</body>
+</html>
